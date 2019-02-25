@@ -116,7 +116,7 @@ def wav_padding(wav_data_lst):
 
     return new_wav_data_lst, wav_lens
 
-def label_padding(laebl_data_lst):
+def label_padding(label_data_lst):
     label_lens = np.array([len(label) for label in label_data_lst])
     max_label_len = max(label_lens)
     new_label_data_lst = np.zeros((len(label_data_lst), max_label_len))

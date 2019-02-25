@@ -1,54 +1,49 @@
 # *_*coding:utf-8 *_*
 
-import os
 import numpy as np
-from scipy.fftpack import fft
-import scipy.io.wavfile as wav
-import matplotlib.pyplot as plt
+from keras import backend as K
+from data_process import source_get, gen_label_data, mk_vocab, data_generator
+from random import shuffle
+from keras.models import load_model
+from CNN_CTC import ctc_lambda
 
+def decode_ctc(num_result, num2word):
+    result = num_result[:, :, :]
+    in_len = np.zeros((1), dtype=np.int32)
+    in_len[0] = result.shape[1]
+    r = K.ctc_decode(result, in_len, greedy=True, beam_width=10, top_paths=1)
+    r1 = K.get_value(r[0][0])
+    r1 = r1[0]
+    text = []
+    for i in r1:
+        text.append(num2word[i])
 
-wavpath = '../data/test.wav'
+    return r1, text
 
-fs, wavsignal = wav.read(wavpath)
+if __name__ == '__main__':
+    source_file = '/home/y_lab/data_thchs30'
+    label_lst, wav_lst = source_get(source_file)
 
-print(wavsignal.shape)
+    label_data = gen_label_data(label_lst[:100])
 
-plt.plot(wavsignal)
-plt.title('Waveprint')
-plt.show()
+    vocab = mk_vocab(label_data)
 
-x = np.linspace(0, 400-1, 400, dtype=np.int64)
-w = .54 - .46 * np.cos(2 * np.pi * x / (400 - 1))   # Hamming window
+    shuffle_list = [i for i in range(100)]
 
-time_window = 25
-window_length = fs // 1000 * time_window
+    # shuffle(shuffle_list)
+    batch = data_generator(1, shuffle_list, wav_lst, label_data, vocab)
 
-# 分帧
-p_begin = 0
-p_end = p_begin + window_length
-frame = wavsignal[p_begin: p_end]
+    model = load_model('../models/model.h5', custom_objects={'<lambda>': lambda y_true, output: output})
+    #
+    for i in range(10):
+        inputs, outputs = next(batch)
+        x = inputs['the_inputs']
+        y = inputs['the_labels'][0]
 
-plt.plot(frame)
-plt.title('Framing')
-plt.show()
-
-# 加窗
-frame = frame * w
-
-plt.plot(frame)
-plt.title('Windowing')
-plt.show()
-
-# 进行傅里叶变换
-frame_fft = np.abs(fft(frame))[:200]
-plt.plot(frame_fft)
-plt.title('FFT')
-plt.show()
-
-# 取对数
-
-frame_log = np.log(frame_fft)
-
-plt.plot(frame_log)
-plt.title('log power spectrum')
-plt.show()
+        result = model.predict(x, steps=1)
+        #
+        # result, text = decode_ctc(result, vocab)
+        #
+        # print('数字结果：', result)
+        # print('文本结果：', text)
+        # print('原文结果：', [vocab[int(i)] for i in y])
