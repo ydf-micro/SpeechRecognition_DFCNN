@@ -49,6 +49,7 @@ def source_get(source_file):
                 wav_lst.append(wav_file)
                 label_lst.append(label_file)
 
+
     for i in range(len(label_lst)):
         wavname = (wav_lst[i].split('/')[-1]).split('.')[0]
         labelname = (label_lst[i].split('/')[-1]).split('.')[0]
@@ -155,55 +156,69 @@ if __name__ == '__main__':
     # plt.imshow(a.T, origin='lower')
     # plt.show()
 
-    source_file = '/home/y_lab/data_thchs30'
+    source_file = '/home/ydf_micro/datasets/data_thchs30'
+    # wav and label path
     label_lst, wav_lst = source_get(source_file)
 
     # 打乱数据
     shuffle_list = [i for i in range(len(label_lst))]
     shuffle(shuffle_list)
 
-    # # print(label_lst[:10])
-    # # print(wav_lst[:10])
+    # print(label_lst[:10])
+    # print(wav_lst[:10])
     #
-    # # print(read_label(label_lst[0]))
-    #
+    # print(read_label(label_lst[0]))
+
     label_data = gen_label_data(label_lst)
-    #
-    # print(len(label_data))
-    #
+
+    # label_data zhe4 ci4 quan2 guo2 qing1 nian2 pai2 qiu2 lian2
+    # print(label_data[:10])
+    # print(len(label_data))  #13388
+
     vocab = mk_vocab(label_data)
-    #
-    # print(len(vocab))
-    #
+
+    # print(vocab)
+    # print(len(vocab))   # 1209 vocab in total
+
     # label_id = word2id(label_data[0], vocab)
     #
     # print(label_data[0])
     # print(label_id)
-    #
+
     # print(vocab[:15])
     # print(label_data[10])
     # print(word2id(label_data[10], vocab))
-    #
+
     # fbank = compute_fbank(wav_lst[0])
     #
+    # print(fbank.shape)
+    # fbank = fbank[:fbank.shape[0]//8*8, :]
     # print(fbank.shape)
     # plt.imshow(fbank.T, origin='lower')
     # plt.show()
 
-    batch = get_batch(4, shuffle_list, wav_lst, label_data, vocab)
-    wav_data_lst, label_data_lst = next(batch)
-    # lens = [len(wav) for wav in wav_data_lst]
-    # print(max(lens))
-    # print(lens)
-    # for wav_data in wav_data_lst:
-    #     print(wav_data.shape)
-    # for label_data in label_data_lst:
-    #     print(label_data)
+    batch_size = 4
 
-    pad_wav_data_lst, wav_lens = wav_padding(wav_data_lst)
-    print(pad_wav_data_lst.shape)
-    print(wav_lens)
 
-    pad_label_data_lst, label_lens = label_padding(label_data_lst)
-    print(pad_label_data_lst.shape)
-    print(label_lens)
+    # batch = get_batch(batch_size, shuffle_list, wav_lst, label_data, vocab)
+    # wav_data_lst, label_data_lst = next(batch)
+    #
+    # # lens = [len(wav) for wav in wav_data_lst]
+    # # print(max(lens))
+    # # print(lens)
+    # # for wav_data in wav_data_lst:
+    # #     print(wav_data.shape)
+    # # for label_data in label_data_lst:
+    # #     print(label_data)
+    #
+    # pad_wav_data_lst, wav_lens = wav_padding(wav_data_lst)
+    # # print(pad_wav_data_lst)
+    # # print(pad_wav_data_lst.shape)
+    # # print(wav_lens)
+    #
+    # pad_label_data_lst, label_lens = label_padding(label_data_lst)
+    # # print(pad_label_data_lst.shape)
+    # # print(label_lens)
+
+    batch = data_generator(batch_size, shuffle_list, wav_lst, label_data, vocab)
+    inputs, outputs = next(batch)
